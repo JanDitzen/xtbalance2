@@ -1,3 +1,4 @@
 v 3
 d Jan Ditzen, Free University of Bozen-Bolzano, jan.ditzen@unibz.it, jan.ditzen.net
-p xtbalance2 Balance unbalanced panel dataset.
+d xtbalance2 Balance unbalanced panel dataset.
+p xtbalance2 xtbalance2 Balance unbalanced panel dataset.
