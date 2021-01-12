@@ -1,7 +1,7 @@
 ***CS-DL debt paper
 clear all
 
-adopath + "D:\StataCode\xtbalance2"
+*adopath + "D:\StataCode\xtbalance2"
 
 cd "D:\Projects\xtdcce2_lr\paper\dofile"
 use CMPR , clear
@@ -18,6 +18,6 @@ gen double dgd = d.gd
 cap program drop xtbalance2
 cap program drop xtcse2
 
-xtbalance2 dy , gen(tousen)
+*xtbalance2 dy , gen(tousen)
 
 xtcse2 y p gd
