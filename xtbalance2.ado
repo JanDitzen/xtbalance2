@@ -7,6 +7,8 @@ capture program drop xtbalance2
 program define xtbalance2, rclass
 	syntax [varlist(ts)] [if] [in] , GENerate(string) [Optimisation(string)]
 		qui {
+			version 15
+
 			local newvar "`generate'"
 
 			tempvar touse
@@ -30,15 +32,15 @@ program define xtbalance2, rclass
 			egen `tvar' = group(`r(tvar)')  if `touse'
 
 			if `max' > -1 {
-				mata BalancePanel("`idvar' `tvar'","`touse'","`newvar'",`max',`varnum'=.)
+				noi mata BalancePanel("`idvar' `tvar'","`touse'","`newvar'",`max',`varnum'=.)
 			}
 			else {
 				tempname times units
-				mata BalancePanel("`idvar' `tvar'","`touse'","`times'",`max',`varnum'=.)
+				mata BalancePanel("`idvar' `tvar'","`touse'","`times'",0,`varnum'=.)
 				sum `times'
 				local TT = r(sum)
 
-				mata BalancePanel("`idvar' `tvar'","`touse'","`units'",`max',`varnum'=.)
+				mata BalancePanel("`idvar' `tvar'","`touse'","`units'",1,`varnum'=.)
 				sum `units'
 				local NN = r(sum)
 
@@ -54,8 +56,9 @@ program define xtbalance2, rclass
 			foreach var of varlist `newvar'* {
 				replace `var' = 0 if `var' == .
 			}
-			*keep if `initaluse'
-			mata st_numscalar("r(NumMax)",`varnum')
+			
+			mata st_numscalar("NumMax",`varnum')
+			return scalar NumMax = NumMax
 		}
 
 
@@ -88,7 +91,7 @@ mata:
 		i = 1
 		while (i<=N) {
 			i
-			 idt[selectindex(idt[.,1]:==ID_uniq[i]),2]
+			idt[selectindex(idt[.,1]:==ID_uniq[i]),2]
 			tsel = idt[selectindex(idt[.,1]:==ID_uniq[i]),2]
 			mat[tsel,i] = J(rows(tsel),1,1)
 			i++
@@ -142,7 +145,9 @@ mata:
 	 	maxs = selectindex(freq[.,3]:==max(freq[.,3]))
 	 	freq = J(1,3,0) \ freq
 	 	"freq"
-	 	freq	 	
+	 	freq
+	 	"maxs"
+	 	maxs	 	
 	 	varNum = rows(maxs)
 	 	s = 1
 	 	while (s<=varNum) {
