@@ -7,7 +7,7 @@ capture program drop xtbalance2
 program define xtbalance2, rclass
 	syntax [varlist(ts)] [if] [in] , GENerate(string) [Optimisation(string)]
 		qui {
-			version 15
+			version 14
 
 			local newvar "`generate'"
 
