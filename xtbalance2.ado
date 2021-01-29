@@ -1,5 +1,5 @@
 *! xtbalance2
-*! v. 0.1
+*! v. 1.0 - 29.01.2021
 *! Jan Ditzen - jan.ditzen@unibz.it - www.jan.ditzen.net
 
 
@@ -12,8 +12,17 @@ program define xtbalance2, rclass
 			local newvar "`generate'"
 
 			tempvar touse
-			marksample touse 
+			marksample touse , strok
 
+/*
+			if "`varlist'" == "" {
+				gen `touse' = 1
+				markout touse * 
+			}			
+			else {
+				marksample touse 
+			}
+*/
 			if "`optimisation'" == "T" | "`optimisation'"=="" {
 				local max = 0
 			}
@@ -22,6 +31,9 @@ program define xtbalance2, rclass
 			}
 			else if "`optimisation'" == "NT" {
 				local max = -1
+			}
+			else {
+				local max = 0
 			}
 
 			tempname varnum idvar tvar
@@ -32,7 +44,7 @@ program define xtbalance2, rclass
 			egen `tvar' = group(`r(tvar)')  if `touse'
 
 			if `max' > -1 {
-				noi mata BalancePanel("`idvar' `tvar'","`touse'","`newvar'",`max',`varnum'=.)
+				mata BalancePanel("`idvar' `tvar'","`touse'","`newvar'",`max',`varnum'=.)
 			}
 			else {
 				tempname times units
@@ -107,9 +119,6 @@ mata:
 	 	
 	 	/// mat now has number of observations for each column. next step is to identify
 	 	/// number which occurs most in each row
-	 	"inital mat"
-	 	mat
-	 	
 	 	runsum = 0
 	 	freq_m1 = 0
 
@@ -144,10 +153,7 @@ mata:
 	 	/// now loop back from start element and set touse column to one
 	 	maxs = selectindex(freq[.,3]:==max(freq[.,3]))
 	 	freq = J(1,3,0) \ freq
-	 	"freq"
-	 	freq
-	 	"maxs"
-	 	maxs	 	
+	 		 	
 	 	varNum = rows(maxs)
 	 	s = 1
 	 	while (s<=varNum) {
@@ -202,11 +208,7 @@ mata:
 		st_view(tousenew,.,idx,tousename)
 
 		index = panelsetup(idt,1)
-		index
-		"N,T"
-		(N,T)
-		"idt"
-		idt
+		
 		/// loop over columns
 		if (max==0) {
 			i = 1
@@ -269,34 +271,34 @@ mata:
 end
 
 capture mata mata drop xtbalance2_selectindex()
-		mata: 
-			function xtbalance2_selectindex(a)
-			{
-				
-					row = rows(a)
-					col = cols(a)
-					if (row==1) {
-						output = J(1,0,.)
-						j = 1
-						while (j<=col) {
-							if (a[1,j] != 0) {
-								output = (output , j)
-							}
-							j++
-						}		
+mata: 
+	function xtbalance2_selectindex(a)
+	{
+		
+			row = rows(a)
+			col = cols(a)
+			if (row==1) {
+				output = J(1,0,.)
+				j = 1
+				while (j<=col) {
+					if (a[1,j] != 0) {
+						output = (output , j)
 					}
-					if (col==1) {
-						output = J(0,1,.)
-						j = 1
-						while (j<=row) {
-							if (a[j,1] != 0) {
-								output = (output \ j)
-							}
-							j++
-						}		
-					}
-
-				return(output)
+					j++
+				}		
 			}
-		end
+			if (col==1) {
+				output = J(0,1,.)
+				j = 1
+				while (j<=row) {
+					if (a[j,1] != 0) {
+						output = (output \ j)
+					}
+					j++
+				}		
+			}
+
+		return(output)
+	}
+end
 
