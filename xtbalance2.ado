@@ -1,11 +1,17 @@
 *! xtbalance2
-*! v. 1.0 - 29.01.2021
+*! v. 1.01 - 01.02.2021
 *! Jan Ditzen - jan.ditzen@unibz.it - www.jan.ditzen.net
 
+/*
+Changelog:
+v. 1.01 - 01.02.2021
+- additional check if column has non zero elements but is discarded
+
+*/
 
 capture program drop xtbalance2
 program define xtbalance2, rclass
-	syntax [varlist(ts)] [if] [in] , GENerate(string) [Optimisation(string)]
+	syntax [varlist(ts)] [if] [in] , GENerate(string) [Optimisation(string) trace]
 		qui {
 			version 14
 
@@ -13,6 +19,10 @@ program define xtbalance2, rclass
 
 			tempvar touse
 			marksample touse , strok
+
+			if "`trace'" != "" {
+				local trace noi
+			}
 
 /*
 			if "`varlist'" == "" {
@@ -44,16 +54,16 @@ program define xtbalance2, rclass
 			egen `tvar' = group(`r(tvar)')  if `touse'
 
 			if `max' > -1 {
-				mata BalancePanel("`idvar' `tvar'","`touse'","`newvar'",`max',`varnum'=.)
+				`trace'	mata BalancePanel("`idvar' `tvar'","`touse'","`newvar'",`max',`varnum'=.)
 			}
 			else {
 				tempname times units
-				mata BalancePanel("`idvar' `tvar'","`touse'","`times'",0,`varnum'=.)
-				sum `times'
+				`trace' mata BalancePanel("`idvar' `tvar'","`touse'","`times'",0,`varnum'=.)
+				`trace' sum `times'
 				local TT = r(sum)
 
-				mata BalancePanel("`idvar' `tvar'","`touse'","`units'",1,`varnum'=.)
-				sum `units'
+				`trace' mata BalancePanel("`idvar' `tvar'","`touse'","`units'",1,`varnum'=.)
+				`trace' sum `units'
 				local NN = r(sum)
 
 				if `NN' >= `TT' {
@@ -102,7 +112,6 @@ mata:
 		/// creates matrix with 1 and 0s for observations
 		i = 1
 		while (i<=N) {
-			i
 			idt[selectindex(idt[.,1]:==ID_uniq[i]),2]
 			tsel = idt[selectindex(idt[.,1]:==ID_uniq[i]),2]
 			mat[tsel,i] = J(rows(tsel),1,1)
@@ -114,9 +123,8 @@ mata:
 			N = cols(mat)
 			T = rows(mat)
 		}
+		mat = mm_colrunsum(mat):*(mat:==1)
 
-	 	mat = mm_colrunsum(mat):*(mat:==1)
-	 	
 	 	/// mat now has number of observations for each column. next step is to identify
 	 	/// number which occurs most in each row
 	 	runsum = 0
@@ -208,26 +216,30 @@ mata:
 		st_view(tousenew,.,idx,tousename)
 
 		index = panelsetup(idt,1)
-		
+		(N,T)
 		/// loop over columns
 		if (max==0) {
+			"loop over cols"
 			i = 1
 			while (i<=N) {
 				coli = returnMat[.,i]
 				if (sum(coli) > 0) {
-					coli = selectindex(coli:==1)
+					coli = selectindex(coli:==1)					
 					panelsubview(tousei,tousenew,i,index)
-					ti = panelsubmatrix(idt[.,2],i,index)
+					ti = panelsubmatrix(idt[.,2],i,index)					
 					coli2 = xtbalance_which2f(coli,ti)
 					coli2 = coli2[selectindex(coli2:!=0)]
-					tousei[coli2,1] = J(rows(coli2),1,1)
+					if (sum(coli2)>0) {
+						tousei[coli2,1] = J(rows(coli2),1,1)
+					}
 				
 				}
 				i++
 			}
 		}
 		else {
-			/// loop over rows (might have bug when!)
+			"loop over rows"
+			/// loop over rows 
 			i = 1
 			while (i<=T) {
 				coli = returnMat[i,.]
@@ -237,7 +249,9 @@ mata:
 					ti = panelsubmatrix(idt[.,2],i,index)
 					coli2 = xtbalance_which2f(coli,ti)
 					coli2 = coli2[selectindex(coli2:!=0)]
-					tousei[coli2,1] = J(rows(coli2),1,1)
+					if (sum(coli2)>0) {
+						tousei[coli2,1] = J(rows(coli2),1,1)
+					}
 				
 				}
 				i++

@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-{hi:help xtbalance2}{right: v. 1.0 - 29. January 2021}
+{hi:help xtbalance2}{right: v. 1.01 - 01. February 2021}
 {hline}
 {title:Title}
 
@@ -88,7 +88,11 @@ Ditzen, J. 2021. xtbalance2:  Create a balanced subsample from unbalanced panel 
 .{p_end}
 
 {marker ChangLog}{title:Changelog}
-{p 4 8}This version: 1.0 - 29 January 2021{p_end}
+{p 4 8}This version: 1.01 - 01 February 2021{p_end}
+
+{p 4 8}Changes v. 1.0 to 1.01{p_end}
+{p 4 8}- bug fixed if column has non zero elements, but none is used.
+Thanks to Raymond Zhang (@Statalist) for spotting the error.{p_end}
 
 {title:Also see}
 {p 4 4}See also: {help xtset}{p_end} 
